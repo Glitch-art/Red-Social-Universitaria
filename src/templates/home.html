@@ -1,0 +1,84 @@
+{% extends './layout.html' %}
+
+{% block titulo %}Home{% endblock %}
+
+{% block body %}
+
+<h1>Bienvenido!!! {{ current_user.correo }}</h1>
+<a class="btn btn-secondary" href="{{ url_for('logout') }}">Cerrar Sesión</a>
+
+<hr>
+
+<!-- Espacio Mensajes Flash -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+    {% for category, message in messages %}
+        <div class="alert alert-success alert-dismissible fade show" role="alert"> 
+            <strong> {{message}} </strong> 
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    {% endfor %}
+{% endif %}
+{% endwith %}
+
+<hr>
+
+<div class="container pt-4">
+    <div class="row">
+        <div class="row">
+            <div class="col-md-4">
+                <main class="form-signin w-100 m-auto">
+                    <form action="/registrarProducto" method="POST" id="formulario">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" fill="currentColor" class="bi bi-box-seam" viewBox="0 0 16 16">
+                            <path d="M8.186 1.113a.5.5 0 0 0-.372 0L1.846 3.5l2.404.961L10.404 2l-2.218-.887zm3.564 1.426L5.596 5 8 5.961 14.154 3.5l-2.404-.961zm3.25 1.7-6.5 2.6v7.922l6.5-2.6V4.24zM7.5 14.762V6.838L1 4.239v7.923l6.5 2.6zM7.443.184a1.5 1.5 0 0 1 1.114 0l7.129 2.852A.5.5 0 0 1 16 3.5v8.662a1 1 0 0 1-.629.928l-7.185 2.874a.5.5 0 0 1-.372 0L.63 13.09a1 1 0 0 1-.63-.928V3.5a.5.5 0 0 1 .314-.464L7.443.184z"/>
+                        </svg>
+                  
+                        <h1 class="h3 mb-3 fw-normal">Registro</h1>
+                    
+                        <div class="form-floating">
+                            <input type="text" class="form-control" id="nombre" name="nombreProducto" placeholder="Nombre Del Producto">
+                            <label for="floatingInput">Nombre Del Producto</label>
+                        </div>
+                        <div class="form-floating">
+                            <input type="number" class="form-control" id="valor" name="valorProducto" placeholder="Valor Del Producto">
+                            <label for="floatingInput">Valor Del Producto</label>
+                        </div>
+                        <div class="form-floating">
+                            <input type="number" class="form-control" id="cantidad" name="cantidadProducto" placeholder="Cantidad Del Producto">
+                            <label for="floatingInput">Cantidad Del Producto</label>
+                        </div>
+                        
+                        <button id="btn" class="w-100 btn btn-lg btn-primary" type="submit">Registrar</button>
+                    </form>
+                </main>
+            </div>
+
+            <div class="col-md-8">
+                <h2>Productos</h2>
+                <table class="table table-striped">
+                    <thead>
+                        <td>Nombre</td>
+                        <td>Valor</td>
+                        <td>Cantidad</td>
+                        <td>Opciones</td>
+                    </thead>
+                    <tbody>
+                        {% for producto in productos %}
+                        <tr>
+                            <td id="tabla_nombre{{producto[0]}}">{{ producto[1] }}</td>
+                            <td id="tabla_valor{{producto[0]}}">{{ producto[2] }}</td>
+                            <td id="tabla_cantidad{{producto[0]}}">{{ producto[3] }}</td>
+                            <td>
+                                <a class="btn btn-secondary btn-sm" onclick="obtenerDatos('{{producto[0]}}')">Editar</a>
+                                <a class="btn btn-danger btn-delete btn-sm" href="/eliminar_producto/{{producto[0]}}">Eliminar</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
