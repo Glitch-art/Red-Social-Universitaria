@@ -12,7 +12,7 @@ config = {
 
 HOST = 'localhost'
 PORT = '5432'
-BD = 'parcial2'
+BD = 'trabajo_final'
 USUARIO = 'postgres'
 PASSWORD = 'root'
 
