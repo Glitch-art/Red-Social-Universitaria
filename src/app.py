@@ -45,59 +45,59 @@ def login():
 
 @app.route('/new_user')
 def new_user():
-  return render_template('auth/new.html')
+    return render_template('auth/new.html')
 
 @app.route('/signup', methods=['POST'])
 def add_user():
-  crearTablaUsers()
-  cursor = con_bd.cursor()
-  form = request.form
-  email = form['email']
-  password = User.passwordHash(form['password'])
-  if email and password:
-    sql = """
-    INSERT INTO
-      users (
-        email,
-        password
-      )
-      VALUES
-      ( %s, %s);
-    """
-    cursor.execute(sql,(email, password))
-    con_bd.commit()
-    flash('Usuario Registrado Correctamente', 'info')
-    return redirect(url_for('index'))
-  else:
-    flash('Error Al Registrar El Usuario', 'danger')
-    return "Error"
+    crearTablaUsers()
+    cursor = con_bd.cursor()
+    form = request.form
+    email = form['email']
+    password = User.passwordHash(form['password'])
+    if email and password:
+        sql = """
+        INSERT INTO
+        users (
+            email,
+            password
+        )
+        VALUES
+        ( %s, %s);
+        """
+        cursor.execute(sql,(email, password))
+        con_bd.commit()
+        flash('Usuario Registrado Correctamente', 'info')
+        return redirect(url_for('index'))
+    else:
+        flash('Error Al Registrar El Usuario', 'danger')
+        return "Error"
 
 @app.route('/registrarProducto', methods=['POST'])
 def registrarProducto():
-  crearTablaProductos()
-  cursor = con_bd.cursor()
-  form = request.form
-  nombreProducto = form['nombreProducto']
-  valorProducto = form['valorProducto']
-  cantidadProducto = form['cantidadProducto']
-  if nombreProducto and valorProducto and cantidadProducto:
-    sql = """
-    INSERT INTO
-      productos (
-        nombreProducto,
-        valorProducto,
-        cantidadProducto
-      )
-      VALUES
-      ( %s, %s, %s);
-    """
-    cursor.execute(sql,(nombreProducto, valorProducto, cantidadProducto))
-    con_bd.commit()
-    flash('Producto Guardado Correctamente', 'info')
-    return redirect(url_for('home'))
-  else:
-    flash('Error Al Guardar El Producto', 'danger')
-    return "Error"
+    crearTablaProductos()
+    cursor = con_bd.cursor()
+    form = request.form
+    nombreProducto = form['nombreProducto']
+    valorProducto = form['valorProducto']
+    cantidadProducto = form['cantidadProducto']
+    if nombreProducto and valorProducto and cantidadProducto:
+        sql = """
+        INSERT INTO
+        productos (
+            nombreProducto,
+            valorProducto,
+            cantidadProducto
+        )
+        VALUES
+        ( %s, %s, %s);
+        """
+        cursor.execute(sql,(nombreProducto, valorProducto, cantidadProducto))
+        con_bd.commit()
+        flash('Producto Guardado Correctamente', 'info')
+        return redirect(url_for('home'))
+    else:
+        flash('Error Al Guardar El Producto', 'danger')
+        return "Error"
 
 @app.route('/home')
 @login_required
