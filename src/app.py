@@ -149,8 +149,12 @@ def crearTablaUsers():
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS users(
         id serial NOT NULL,
-        email character varying(50),
-        password character varying(255),
+        email character varying(255) NOT NULL,
+        password character varying(255) NOT NULL,
+        name character varying(255) NOT NULL,
+        type_user character varying(255) NOT NULL,
+        created_at timestamp without time zone,
+        updated_at timestamp without time zone,
         CONSTRAINT pk_user_id PRIMARY KEY (id)
         );
     ''')
@@ -165,6 +169,57 @@ def crearTablaProductos():
         valorProducto integer,
         cantidadProducto integer,
         CONSTRAINT pk_productos_id PRIMARY KEY (id)
+        );
+    ''')
+    con_bd.commit()
+
+def createUserFriendsTable():
+    cursor = con_bd.cursor()
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS user_friends(
+        id serial NOT NULL,
+        user_id integer NOT NULL,
+        friend_id integer NOT NULL,
+        status character varying(255) NOT NULL,
+        created_at timestamp without time zone,
+        updated_at timestamp without time zone,
+        CONSTRAINT pk_user_friends_id PRIMARY KEY (id)
+        FOREIGN KEY (user_id) REFERENCES users(id),
+        FOREIGN KEY (friend_id) REFERENCES users(id),
+        );
+    ''')
+    con_bd.commit()
+
+def createPostsTable():
+    cursor = con_bd.cursor()
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS posts(
+        id serial NOT NULL,
+        user_id integer NOT NULL,
+        description character varying(255),
+        content text,
+        created_at timestamp without time zone,
+        updated_at timestamp without time zone,
+        CONSTRAINT pk_posts_id PRIMARY KEY (id)
+        FOREIGN KEY (user_id) REFERENCES users(id),
+        );
+    ''')
+    con_bd.commit()
+
+def createAcademicFileTable():
+    cursor = con_bd.cursor()
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS academic_file(
+        id serial NOT NULL,
+        user_id integer NOT NULL,
+        teacher_id integer NOT NULL,
+        name character varying(255),
+        content text,
+        created_at timestamp without time zone,
+        updated_at timestamp without time zone,
+        CONSTRAINT pk_academic_file_id PRIMARY KEY (id)
+        FOREIGN KEY (user_id) REFERENCES users(id),
+        FOREIGN KEY (teacher_id) REFERENCES users(id),
         );
     ''')
     con_bd.commit()
