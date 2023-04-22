@@ -66,8 +66,10 @@ def add_user():
     """
     cursor.execute(sql,(email, password))
     con_bd.commit()
+    flash('Usuario Registrado Correctamente', 'info')
     return redirect(url_for('index'))
   else:
+    flash('Error Al Registrar El Usuario', 'danger')
     return "Error"
 
 @app.route('/registrarProducto', methods=['POST'])
