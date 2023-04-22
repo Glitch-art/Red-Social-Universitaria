@@ -6,8 +6,8 @@ class ModelUser():
     def login(self, db, user):
         try:
             cursor = db.cursor()
-            sql = """SELECT id, correo, password FROM users
-                        WHERE correo = '{}'""".format(user.correo)
+            sql = """SELECT id, email, password FROM users
+                        WHERE email = '{}'""".format(user.email)
             cursor.execute(sql)
             row = cursor.fetchone()
             if row != None:
@@ -23,7 +23,7 @@ class ModelUser():
     def get_by_id(self, db, id):
         try:
             cursor = db.cursor()
-            sql = """SELECT id, correo FROM users
+            sql = """SELECT id, email FROM users
                         WHERE id = {}""".format(id)
             cursor.execute(sql)
             row = cursor.fetchone()

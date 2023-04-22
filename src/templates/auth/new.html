@@ -17,9 +17,11 @@
 
     <h1 class="h3 mb-3 fw-normal">Registro</h1>
 
+    {% include "partials/flash.html" %}
+
     <div class="form-floating">
-      <input type="email" class="form-control" id="floatingInput" name="correo" placeholder="name@example.com">
-      <label for="floatingInput">Correo</label>
+      <input type="email" class="form-control" id="floatingInput" name="email" placeholder="name@example.com">
+      <label for="floatingInput">email</label>
     </div>
     <div class="form-floating">
       <input type="password" class="form-control" id="floatingPassword" name="password" placeholder="Contraseña">

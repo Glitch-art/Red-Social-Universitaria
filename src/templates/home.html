@@ -4,22 +4,12 @@
 
 {% block body %}
 
-<h1>Bienvenido!!! {{ current_user.correo }}</h1>
+<h1>Bienvenido!!! {{ current_user.email }}</h1>
 <a class="btn btn-secondary" href="{{ url_for('logout') }}">Cerrar Sesión</a>
 
 <hr>
 
-<!-- Espacio Mensajes Flash -->
-{% with messages = get_flashed_messages(with_categories=true) %}
-{% if messages %}
-    {% for category, message in messages %}
-        <div class="alert alert-success alert-dismissible fade show" role="alert"> 
-            <strong> {{message}} </strong> 
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    {% endfor %}
-{% endif %}
-{% endwith %}
+{% include "partials/flash.html" %}
 
 <hr>
 

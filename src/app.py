@@ -25,19 +25,20 @@ def index():
 def login():
     crearTablaUsers()
     if request.method == 'POST':
-        # print(request.form['correo'])
+        # print(request.form['email'])
         # print(request.form['password'])
-        user = User(0, request.form['correo'], request.form['password'])
+        user = User(0, request.form['email'], request.form['password'])
         logged_user = ModelUser.login(con_bd, user)
         if logged_user != None:
             if logged_user.password:
                 login_user(logged_user)
+                flash("Bienvenido", "success")
                 return redirect(url_for('home'))
             else:
-                print('Contraseña invalida')
+                flash("Contraseña o usuario incorrecto", "danger")
                 return render_template('auth/login.html')
         else:
-            print('Usuario no encontrado')
+            flash("Contraseña o usuario incorrecto", "danger")
             return render_template('auth/login.html')
     else:
         return render_template('auth/login.html')
@@ -51,19 +52,19 @@ def add_user():
   crearTablaUsers()
   cursor = con_bd.cursor()
   form = request.form
-  correo = form['correo']
+  email = form['email']
   password = User.passwordHash(form['password'])
-  if correo and password:
+  if email and password:
     sql = """
     INSERT INTO
       users (
-        correo,
+        email,
         password
       )
       VALUES
       ( %s, %s);
     """
-    cursor.execute(sql,(correo, password))
+    cursor.execute(sql,(email, password))
     con_bd.commit()
     return redirect(url_for('index'))
   else:
@@ -108,6 +109,7 @@ def home():
 @app.route('/logout')
 def logout():
     logout_user()
+    flash("Sesión cerrada correctamente", "success")
     return redirect(url_for('login'))
 
 @app.route('/editar_producto/<int:id>', methods=['POST'])
@@ -145,7 +147,7 @@ def crearTablaUsers():
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS users(
         id serial NOT NULL,
-        correo character varying(50),
+        email character varying(50),
         password character varying(255),
         CONSTRAINT pk_user_id PRIMARY KEY (id)
         );
