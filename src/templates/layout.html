@@ -14,6 +14,7 @@
     <div class="container">
         <nav class="navbar navbar-expand-lg bg-body-tertiary">
             <div class="container-fluid">
+              {% if not current_user.id %}
               <a class="navbar-brand" href="/">Iniciar Sesión</a>
               <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
@@ -23,6 +24,24 @@
                   <a class="nav-link active" aria-current="page" href="/new_user">Registrarse</a>
                 </div>
               </div>
+              {% endif %}
+              <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+                <div class="navbar-nav">
+                  <a class="nav-link active" aria-current="page" href="/home">Inicio</a>
+                </div>
+              </div>
+              {% if current_user.id %}
+                  <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+                    <div class="navbar-nav">
+                      <a class="nav-link active" aria-current="page" href="/profile/{{current_user.id}}">{{current_user.name}}</a>
+                    </div>
+                  </div>
+                  <div class="collapse navbar-collapse">
+                    <div class="navbar-nav">
+                      <a class="nav-link" href="{{ url_for('logout') }}">Cerrar Sesión</a>
+                    </div>
+                  </div>
+              {% endif %}
             </div>
         </nav>
         {% block body %}

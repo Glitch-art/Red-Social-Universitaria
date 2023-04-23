@@ -1,9 +1,9 @@
 {% extends './layout.html' %}
 
-{% block titulo %}{{ current_user.name }}{% endblock %}
+{% block titulo %}{{ data.user.name }}{% endblock %}
 
 {% block body %}
-<h1>Bienvenido, {{ current_user.name }}!</h1>
+<h1>Perfil de {{ data.user.name }}</h1>
 <div class="container pt-4">
     <div class="row">
         <div class="row">
@@ -43,10 +43,11 @@
             <!-- TODO Mejorar visualizacion de las publicaciones -->
             {% if data.is_my_profile %}
             <div class="col-md-8">
+                <h2>Mis Publicaciones</h2>
             {% else %}
             <div class="col-md-12">
+                <h2>Publicaciones de {{ data.user.name }}</h2>
             {% endif %}
-                <h2>Mis Publicaciones</h2>
                 <table class="table table-striped">
                     <thead>
                         <td>Creador</td>
@@ -60,11 +61,18 @@
                             <td id="tabla_user_id{{post[0]}}"><a href="{{ url_for('profile', id=post[1]) }}">{{ post[6] }}</a></td>
                             <td id="tabla_description{{post[0]}}">{{ post[2] }}</td>
                             <td id="tabla_content{{post[0]}}">
+                                {% if post[3] %}
                                 <img src="{{ url_for( 'static', filename='uploads/' + post[3] ) }}" alt="Imagen" width="125px" height="125px">
+                                {% endif %}
                             </td>
                             <td>
+                                {% if current_user.id == post[1] %}
                                 <a class="btn btn-secondary btn-sm" onclick="obtenerDatos('{{post[0]}}')">Editar</a>
-                                <a class="btn btn-danger btn-delete btn-sm" href="/eliminar_post/{{post[0]}}">Eliminar</a>
+                                {% endif %}
+                                <!-- Solo puede borrar publicaciones si es profesor o es el autor -->
+                                {% if current_user.type_user == "teacher" or current_user.id == post[1] %}
+                                    <a class="btn btn-danger btn-delete btn-sm" href="/eliminar_post/{{post[0]}}">Eliminar</a>
+                                {% endif %}
                             </td>
                         </tr>
                         {% endfor %}

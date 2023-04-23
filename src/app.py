@@ -68,7 +68,7 @@ def login():
         if logged_user != None:
             if logged_user.password:
                 login_user(logged_user)
-                flash("Bienvenido", "success")
+                flash(f"Bienvenido, {current_user.name}!", "success")
                 return redirect(url_for('home'))
             else:
                 flash("Contraseña o usuario incorrecto", "danger")
@@ -166,7 +166,8 @@ def profile(id):
     is_my_profile = id == current_user.id
     data = {
         'posts':posts,
-        'is_my_profile': is_my_profile
+        'is_my_profile': is_my_profile,
+        'user': ModelUser.get_by_id(con_bd, id),
     }
     return render_template('profile.html', data = data)
     
@@ -181,35 +182,43 @@ def create_post():
     content = request.files['content']
     user_id = current_user.id
     now = datetime.now()
-    
-    filename = secure_filename(content.filename)
-    # debugger
-    if content and user_id and allowed_file(filename):
+
+    if user_id == None:
+        flash('Error Al Crear El Post: No Hay Usuario Logueado', 'danger')
+        return redirect(request.referrer)
+    if content:
+        filename = secure_filename(content.filename)
+        if allowed_file(filename) == False:
+            flash('Error Al Crear El Post: El Archivo No Es Valido', 'danger')
+            return redirect(request.referrer)
         base_path = os.path.dirname(__file__)
         short_date = now.strftime("%Y%m%d")
         filename_complete = f"{short_date}_{str(current_user.id)}_{filename}"
         content_route = os.path.join(base_path, app.config['UPLOAD_FOLDER'], filename_complete)
         try:
             content.save(content_route)
-            sql = """
-                INSERT INTO
-                posts (
-                    user_id,
-                    description,
-                    content,
-                    created_at
-                )
-                VALUES
-                ( %s, %s, %s, %s);
-            """
-            cursor.execute(sql,(user_id, description, filename_complete, now))
-            con_bd.commit()
-            flash('Post Creado Correctamente', 'success')
-            return redirect(url_for('home'))
         except Exception as e:
             flash('Error Al Crear El Post: ' + str(e), 'danger')
     else:
-        flash('Error Al Crear El Post', 'danger')
+        filename_complete = ""
+    try:
+        sql = """
+            INSERT INTO
+            posts (
+                user_id,
+                description,
+                content,
+                created_at
+            )
+            VALUES
+            ( %s, %s, %s, %s);
+        """
+        cursor.execute(sql,(user_id, description, filename_complete, now))
+        con_bd.commit()
+        flash('Post Creado Correctamente', 'success')
+        return redirect(url_for('home'))
+    except Exception as e:
+        flash('Error Al Crear El Post: ' + str(e), 'danger')
     return redirect(request.referrer)
 
 def allowed_file(file):
@@ -239,14 +248,18 @@ def editar(id):
         flash('Error al editar el producto', 'danger')
         return "Error en la consulta"
 
-@app.route('/eliminar_producto/<int:id>')
-def eliminar(id):
-   cursor = con_bd.cursor()
-   sql = "DELETE FROM productos WHERE id = {0}".format(id)
-   cursor.execute(sql)
-   con_bd.commit()
-   flash('Producto Eliminado Correctamente', 'info')
-   return redirect(url_for('home'))
+@app.route('/eliminar_post/<int:id>')
+def eliminar_post(id):
+    try:
+        cursor = con_bd.cursor()
+        sql = "DELETE FROM posts WHERE id = {0}".format(id)
+        cursor.execute(sql)
+        con_bd.commit()
+        flash('Post Eliminado Correctamente', 'info')
+        return redirect(url_for('home'))
+    except Exception as e:
+        flash('Error Al Eliminar El Post: ' + str(e), 'danger')
+        return request.referrer
 
 # Crear Tablas
 
