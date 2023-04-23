@@ -13,11 +13,12 @@
                     <form action="/create_post" method="POST" id="formulario" enctype="multipart/form-data">
                         <h1 class="h3 mb-3 fw-normal">Nueva publicación</h1>
                         <div class="form-floating">
-                            <input type="text" class="form-control" id="post_description" name="description" placeholder="Descripción">
+                            <input type="text" class="form-control" id="form_post_description" name="description" placeholder="Descripción">
                             <label for="floatingInput">Descripción</label>
                         </div>
+                        <img id="form_post_content_image" src="" class="d-none" id="preview" alt="Preview" width="200px" height="200px">
                         <div class="form-floating">
-                            <input type="file" class="form-control" id="post_content" name="content" placeholder="Contenido" accept=".jpg .jpeg .png .gif .mp4">
+                            <input type="file" class="form-control" id="form_post_content" name="content" placeholder="Contenido" accept=".jpg .jpeg .png .gif .mp4">
                             <label for="floatingInput">Contenido</label>
                         </div>
 
@@ -47,7 +48,7 @@
                             </td>
                             <td>
                                 {% if current_user.id == post[1] %}
-                                <a class="btn btn-secondary btn-sm" onclick="obtenerDatos('{{post[0]}}')">Editar</a>
+                                <a class="btn btn-secondary btn-sm" onclick="editPost('{{post[0]}}')">Editar</a>
                                 {% endif %}
                                 <!-- Solo puede borrar publicaciones si es profesor o es el autor -->
                                 {% if current_user.type_user == "teacher" or current_user.id == post[1] %}
@@ -62,5 +63,5 @@
         </div>
     </div>
 </div>
-
+<script src="{{ url_for('static', filename='js/home.js')}}"></script>
 {% endblock %}

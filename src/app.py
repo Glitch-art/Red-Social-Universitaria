@@ -192,8 +192,7 @@ def create_post():
             flash('Error Al Crear El Post: El Archivo No Es Valido', 'danger')
             return redirect(request.referrer)
         base_path = os.path.dirname(__file__)
-        short_date = now.strftime("%Y%m%d")
-        filename_complete = f"{short_date}_{str(current_user.id)}_{filename}"
+        filename_complete = create_filename_complete(filename)
         createUploadsFolder()
         content_route = os.path.join(base_path, app.config['UPLOAD_FOLDER'], filename_complete)
         try:
@@ -222,6 +221,12 @@ def create_post():
         flash('Error Al Crear El Post: ' + str(e), 'danger')
     return redirect(request.referrer)
 
+def create_filename_complete(filename):
+    now = datetime.now()
+    short_date = now.strftime("%Y%m%d")
+    filename_complete = f"{short_date}_{str(current_user.id)}_{filename}"
+    return filename_complete
+
 def allowed_file(file):
     file = file.split('.')
     if file[1] in ALLOWED_EXTENSIONS:
@@ -234,26 +239,51 @@ def createUploadsFolder():
     if not os.path.exists(uploads_folder):
         os.makedirs(uploads_folder)
 
-@app.route('/editar_producto/<int:id>', methods=['POST'])
-def editar(id):
+@app.route('/edit_post/<int:id>', methods=['POST'])
+def edit_post(id):
     cursor = con_bd.cursor()
     form = request.form
-    nombreProducto = form['nombreProducto']
-    valorProducto = form['valorProducto']
-    cantidadProducto = form['cantidadProducto']
-    if nombreProducto and valorProducto and cantidadProducto:
+    description = form['description']
+    content = request.files['content']
+    now = datetime.now()
+
+    if not current_user.id:
+        flash('Error Al Modificar El Post: No Hay Usuario Logueado', 'danger')
+        return redirect(request.referrer)
+    if content:
+        filename = secure_filename(content.filename)
+        if allowed_file(filename) == False:
+            flash('Error Al Modificar El Post: El Archivo No Es Valido', 'danger')
+            return redirect(request.referrer)
+        base_path = os.path.dirname(__file__)
+        filename_complete = create_filename_complete(filename)
+        createUploadsFolder()
+        content_route = os.path.join(base_path, app.config['UPLOAD_FOLDER'], filename_complete)
+        try:
+            content.save(content_route)
+            sql = """
+                UPDATE posts
+                SET description=%s, content=%s, updated_at=%s
+                WHERE id = %s
+            """
+            cursor.execute(sql,(description, filename_complete, now, id))
+        except Exception as e:
+            flash('Error Al Modificar El Post: ' + str(e), 'danger')
+    else:
+        #TODO
         sql = """
-            UPDATE productos
-            SET nombreProducto=%s, valorProducto=%s, cantidadProducto=%s
+            UPDATE posts
+            SET description=%s, updated_at=%s
             WHERE id = %s
         """
-        cursor.execute(sql, (nombreProducto, valorProducto, cantidadProducto, id))
+        cursor.execute(sql,(description, now, id))
+    try:
         con_bd.commit()
-        flash('Producto Editado Correctamente', 'info')
+        flash('Post Modificado Correctamente', 'success')
         return redirect(url_for('home'))
-    else:
-        flash('Error al editar el producto', 'danger')
-        return "Error en la consulta"
+    except Exception as e:
+        flash('Error Al Modificar El Post: ' + str(e), 'danger')
+    return redirect(request.referrer)
 
 @app.route('/eliminar_post/<int:id>')
 def eliminar_post(id):
