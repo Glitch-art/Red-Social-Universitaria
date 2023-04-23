@@ -2,6 +2,7 @@ from psycopg2 import connect
 
 class Config:
     SECRET_KEY = 'B!1w8NAt1T^%kvhUI*S^'
+    UPLOAD_FOLDER = 'static/uploads'
 
 class DevelopmentConfig(Config):
     DEBUG = True
