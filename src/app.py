@@ -194,6 +194,7 @@ def create_post():
         base_path = os.path.dirname(__file__)
         short_date = now.strftime("%Y%m%d")
         filename_complete = f"{short_date}_{str(current_user.id)}_{filename}"
+        createUploadsFolder()
         content_route = os.path.join(base_path, app.config['UPLOAD_FOLDER'], filename_complete)
         try:
             content.save(content_route)
@@ -226,6 +227,12 @@ def allowed_file(file):
     if file[1] in ALLOWED_EXTENSIONS:
         return True
     return False
+
+def createUploadsFolder():
+    base_path = os.path.dirname(__file__)
+    uploads_folder = os.path.join(base_path, app.config['UPLOAD_FOLDER'])
+    if not os.path.exists(uploads_folder):
+        os.makedirs(uploads_folder)
 
 @app.route('/editar_producto/<int:id>', methods=['POST'])
 def editar(id):
