@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, flash
 from config import *
 from flask_login import LoginManager, login_user, logout_user, login_required
+from datetime import datetime
 
 from models.ModelUser import ModelUser
 from models.entities.User import User
@@ -54,23 +55,32 @@ def add_user():
     form = request.form
     email = form['email']
     password = User.passwordHash(form['password'])
-    if email and password:
-        sql = """
-        INSERT INTO
-        users (
-            email,
-            password
-        )
-        VALUES
-        ( %s, %s);
-        """
-        cursor.execute(sql,(email, password))
-        con_bd.commit()
-        flash('Usuario Registrado Correctamente', 'info')
-        return redirect(url_for('index'))
+    name = form['name']
+    type_user = form['type_user']
+    now = datetime.now()
+    if email and password and name and type_user:
+        try:
+            sql = """
+            INSERT INTO
+            users (
+                email,
+                password,
+                name,
+                type_user,
+                created_at
+            )
+            VALUES
+            ( %s, %s, %s, %s, %s);
+            """
+            cursor.execute(sql,(email, password, name, type_user, now))
+            con_bd.commit()
+            flash('Usuario Registrado Correctamente', 'info')
+            return redirect(url_for('index'))
+        except Exception as e:
+            flash('Error Al Registrar El Usuario: ' + str(e), 'danger')
     else:
         flash('Error Al Registrar El Usuario', 'danger')
-        return "Error"
+    return redirect(request.referrer)
 
 @app.route('/registrarProducto', methods=['POST'])
 def registrarProducto():
@@ -183,9 +193,9 @@ def createUserFriendsTable():
         status character varying(255) NOT NULL,
         created_at timestamp without time zone,
         updated_at timestamp without time zone,
-        CONSTRAINT pk_user_friends_id PRIMARY KEY (id)
+        CONSTRAINT pk_user_friends_id PRIMARY KEY (id),
         FOREIGN KEY (user_id) REFERENCES users(id),
-        FOREIGN KEY (friend_id) REFERENCES users(id),
+        FOREIGN KEY (friend_id) REFERENCES users(id)
         );
     ''')
     con_bd.commit()
@@ -200,8 +210,8 @@ def createPostsTable():
         content text,
         created_at timestamp without time zone,
         updated_at timestamp without time zone,
-        CONSTRAINT pk_posts_id PRIMARY KEY (id)
-        FOREIGN KEY (user_id) REFERENCES users(id),
+        CONSTRAINT pk_posts_id PRIMARY KEY (id),
+        FOREIGN KEY (user_id) REFERENCES users(id)
         );
     ''')
     con_bd.commit()
@@ -217,9 +227,9 @@ def createAcademicFileTable():
         content text,
         created_at timestamp without time zone,
         updated_at timestamp without time zone,
-        CONSTRAINT pk_academic_file_id PRIMARY KEY (id)
+        CONSTRAINT pk_academic_file_id PRIMARY KEY (id),
         FOREIGN KEY (user_id) REFERENCES users(id),
-        FOREIGN KEY (teacher_id) REFERENCES users(id),
+        FOREIGN KEY (teacher_id) REFERENCES users(id)
         );
     ''')
     con_bd.commit()
