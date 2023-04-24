@@ -471,7 +471,8 @@ def send_friend_request(friend_id):
     if friend_id == None:
         flash('Error Al Enviar La Solicitud De Amistad: Usuario no encontrado', 'danger')
         return redirect(url_for('home'))
-    if get_user_friend_by_user_id_and_friend_id(user_id, friend_id):
+    user_friend = get_user_friend_by_user_id_and_friend_id(user_id, friend_id)
+    if user_friend and user_friend['status'] not in ['pending', 'accepted']:
         flash('Error Al Enviar La Solicitud De Amistad: Ya Existe Una Solicitud De Amistad Entre Los Usuarios', 'danger')
         return redirect(url_for('home'))
     try:
