@@ -1,0 +1,102 @@
+{% extends './layout.html' %}
+
+{% block titulo %}Amigos{% endblock %}
+
+{% block body %}
+<h1>Amigos</h1>
+{% include "partials/flash.html" %}
+<div class="container pt-4">
+    <div class="row">
+        <div class="row">
+            <div class="col-md-5">
+                <main class="form-signin w-100 m-auto">
+                    <h2>Solicitudes entrantes</h2>
+                    <table class="table table-striped">
+                        <thead>
+                            <td>Usuario</td>
+                            <td>Desde</td>
+                            <td>Opciones</td>
+                        </thead>
+                        <tbody>
+                            {% if data.incoming_requests %}
+                                {% for user_friend in data.incoming_requests %}
+                                <tr>
+                                    <td id="tabla_friend_id{{user_friend['id']}}">
+                                        <a href="{{ url_for('profile', id=user_friend['friend_id']) }}">{{ user_friend['friend_name'] }}</a>
+                                    </td>
+                                    <td id="tabla_updated_at{{user_friend['id']}}">{{ user_friend['updated_at'].strftime("%Y-%m-%d") if user_friend['updated_at'] else user_friend['created_at'].strftime("%Y-%m-%d") }}</td>
+                                    <td>
+                                        <a class="btn btn-success btn-sm" href="/accept_friend_request/{{user_friend['id']}}">Aceptar solicitud</a>
+                                        <a class="btn btn-danger btn-delete btn-sm" href="/delete_friend_request/{{user_friend['id']}}">Rechazar solicitud</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="3">No hay solicitudes entrantes</td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                    <hr>
+                    <h2>Solicitudes enviadas</h2>
+                    <table class="table table-striped">
+                        <thead>
+                            <td>Usuario</td>
+                            <td>Desde</td>
+                            <td>Opciones</td>
+                        </thead>
+                        <tbody>
+                            {% if data.requests_sent %}
+                                {% for user_friend in data.requests_sent %}
+                                <tr>
+                                    <td id="tabla_friend_id{{user_friend['id']}}">
+                                        <a href="{{ url_for('profile', id=user_friend['friend_id']) }}">{{ user_friend['friend_name'] }}</a>
+                                    </td>
+                                    <td id="tabla_updated_at{{user_friend['id']}}">{{ user_friend['updated_at'].strftime("%Y-%m-%d") if user_friend['updated_at'] else user_friend['created_at'].strftime("%Y-%m-%d") }}</td>
+                                    <td>
+                                        <a class="btn btn-danger btn-delete btn-sm" href="/delete_friend_request/{{user_friend['id']}}">Cancelar solicitud de amistad</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="3">No hay solicitudes enviadas</td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </main>
+            </div>
+            <!-- TODO Mejorar visualizacion de las publicaciones -->
+            <div class="col-md-7">
+                <h2>Mis Amigos</h2>
+                <table class="table table-striped">
+                    <thead>
+                        <td>Amigo</td>
+                        <td>Desde</td>
+                        <td>Opciones</td>
+                    </thead>
+                    <tbody>
+                    {% if data.list_friends %}
+                        {% for user_friend in data.list_friends %}
+                        <tr>
+                            <td id="tabla_friend_id{{user_friend['id']}}"><a href="{{ url_for('profile', id=user_friend['friend_id']) }}">{{ user_friend['friend_name'] }}</a></td>
+                            <td id="tabla_updated_at{{user_friend['id']}}">{{ user_friend['updated_at'].strftime("%Y-%m-%d") if user_friend['updated_at'] else user_friend['created_at'].strftime("%Y-%m-%d") }}</td>
+                            <td>
+                                <a class="btn btn-danger btn-delete btn-sm" href="/delete_friend_request/{{user_friend['id']}}">Eliminar amigo</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="3">No hay amigos</td>
+                        </tr>
+                    {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

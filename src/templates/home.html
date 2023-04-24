@@ -37,26 +37,32 @@
                         <td>Opciones</td>
                     </thead>
                     <tbody>
+                    {% if data.posts %}
                         {% for post in data.posts %}
                         <tr>
-                            <td id="tabla_user_id{{post[0]}}"><a href="{{ url_for('profile', id=post[1]) }}">{{ post[6] }}</a></td>
-                            <td id="tabla_description{{post[0]}}">{{ post[2] }}</td>
-                            <td id="tabla_content{{post[0]}}">
-                                {% if post[3] %}
-                                <img src="{{ url_for( 'static', filename='uploads/' + post[3] ) }}" alt="Imagen" width="125px" height="125px">
+                            <td id="tabla_user_id{{post['id']}}"><a href="{{ url_for('profile', id=post['user_id']) }}">{{ post['user_name'] }}</a></td>
+                            <td id="tabla_description{{post['id']}}">{{ post['description'] }}</td>
+                            <td id="tabla_content{{post['id']}}">
+                                {% if post['content'] %}
+                                <img src="{{ url_for( 'static', filename='uploads/' + post['content'] ) }}" alt="Imagen" width="125px" height="125px">
                                 {% endif %}
                             </td>
                             <td>
-                                {% if current_user.id == post[1] %}
-                                <a class="btn btn-secondary btn-sm" onclick="editPost('{{post[0]}}')">Editar</a>
+                                {% if current_user.id == post['user_id'] %}
+                                <a class="btn btn-secondary btn-sm" onclick="editPost('{{ post["id"] }}')">Editar</a>
                                 {% endif %}
                                 <!-- Solo puede borrar publicaciones si es profesor o es el autor -->
-                                {% if current_user.type_user == "teacher" or current_user.id == post[1] %}
-                                    <a class="btn btn-danger btn-delete btn-sm" href="/eliminar_post/{{post[0]}}">Eliminar</a>
+                                {% if current_user.type_user == "teacher" or current_user.id == post['user_id'] %}
+                                    <a class="btn btn-danger btn-delete btn-sm" href="/eliminar_post/{{post['id']}}">Eliminar</a>
                                 {% endif %}
                             </td>
                         </tr>
                         {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="4">No hay publicaciones</td>
+                        </tr>
+                    {% endif %}
                     </tbody>
                 </table>
             </div>

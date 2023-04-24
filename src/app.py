@@ -31,7 +31,6 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif' 'mp4'}
 @app.route('/')
 def index():
     crearTablaUsers()
-    crearTablaProductos()
     return redirect(url_for('login'))
 
 # Home
@@ -48,7 +47,20 @@ def home():
         ORDER BY posts.id DESC
     """
     cursor.execute(sql)
-    posts = cursor.fetchall()
+    results = cursor.fetchall()
+    
+    posts = []
+    for row in results:
+        post = {
+            "id": row[0],
+            "user_id": row[1],
+            "description": row[2],
+            "content": row[3],
+            "created_at": row[4],
+            "updated_at": row[5],
+            "user_name": row[6]
+        }
+        posts.append(post)
     data = {
         "posts": posts
     }
@@ -109,8 +121,12 @@ def add_user():
             """
             cursor.execute(sql,(email, password, name, type_user, now))
             con_bd.commit()
+            
+            # Loggear al usuario
+            logged_user = ModelUser.login(con_bd, email, password)
+            login_user(logged_user)
             flash('Usuario Registrado Correctamente', 'info')
-            return redirect(url_for('index'))
+            return redirect(url_for('home'))
         except Exception as e:
             flash('Error Al Registrar El Usuario: ' + str(e), 'danger')
     else:
@@ -135,7 +151,6 @@ def editar_user(id):
         cursor.execute(sql, (email, password, name, type_user, now, id))
         con_bd.commit()
         flash('Usuario Editado Correctamente', 'info')
-        return redirect(url_for('home'))
     else:
         flash('Error Al Editar El Usuario', 'danger')
     return redirect(request.referrer)
@@ -164,10 +179,15 @@ def profile(id):
     posts = cursor.fetchall()
     
     is_my_profile = id == current_user.id
+    user_friend = get_user_friend_by_user_id_and_friend_id(current_user.id, id) if not is_my_profile else None
+    friend_status = user_friend["status"] if user_friend else None
+    user_friend_id = user_friend["id"] if user_friend else None
     data = {
         'posts':posts,
-        'is_my_profile': is_my_profile,
         'user': ModelUser.get_by_id(con_bd, id),
+        'is_my_profile': is_my_profile,
+        'friend_status': friend_status,
+        'user_friend_id': user_friend_id,
     }
     return render_template('profile.html', data = data)
     
@@ -270,7 +290,6 @@ def edit_post(id):
         except Exception as e:
             flash('Error Al Modificar El Post: ' + str(e), 'danger')
     else:
-        #TODO
         sql = """
             UPDATE posts
             SET description=%s, updated_at=%s
@@ -298,6 +317,257 @@ def eliminar_post(id):
         flash('Error Al Eliminar El Post: ' + str(e), 'danger')
         return request.referrer
 
+# Friends
+
+STATUS_USER_FRIENDS = {'pending': 'Pendiente', 'accepted': 'Aceptado'}
+
+@app.route('/friends')
+def friends():
+    createUserFriendsTable()
+    cursor = con_bd.cursor()
+    if not current_user.id:
+        flash('Error Al Listar Los Amigos: No Hay Usuario Logueado', 'danger')
+        return redirect(request.referrer)
+    id = current_user.id
+    incoming_requests = []
+    try:
+        sql_incoming_requests = """
+            SELECT user_friends.*, u1.name as user_name, u2.name as friend_name
+            FROM user_friends
+            JOIN users u1
+            ON user_friends.user_id = u1.id
+            JOIN users u2
+            ON user_friends.friend_id = u2.id
+            WHERE user_friends.friend_id = %s AND user_friends.status = 'pending'
+            ORDER BY user_friends.id DESC
+        """
+        cursor.execute(sql_incoming_requests, (id,))
+        results = cursor.fetchall()
+
+        for row in results:
+            if current_user.id == row[1]:
+                user_id = row[1]
+                user_name = row[6]
+                friend_id = row[2]
+                friend_name = row[7]
+            else:
+                user_id = row[2]
+                user_name = row[7]
+                friend_id = row[1]
+                friend_name = row[6]
+            user_friend = {
+                "id": row[0],
+                "user_id": user_id,
+                "friend_id": friend_id,
+                "status": row[3],
+                "created_at": row[4],
+                "updated_at": row[5],
+                "user_name": user_name,
+                "friend_name": friend_name
+            }
+            incoming_requests.append(user_friend)
+    except Exception as e:
+        flash('Error Al Listar Los Amigos Con Solicitud Pendiente: ' + str(e), 'danger')
+    requests_sent = []
+    try:
+        sql_requests_sent = """
+            SELECT user_friends.*, u1.name as user_name, u2.name as friend_name
+            FROM user_friends
+            JOIN users u1
+            ON user_friends.user_id = u1.id
+            JOIN users u2
+            ON user_friends.friend_id = u2.id
+            WHERE user_friends.user_id = %s AND user_friends.status = 'pending'
+            ORDER BY user_friends.id DESC
+        """
+        cursor.execute(sql_requests_sent, (id,))
+        results = cursor.fetchall()
+
+        for row in results:
+            if current_user.id == row[1]:
+                user_id = row[1]
+                user_name = row[6]
+                friend_id = row[2]
+                friend_name = row[7]
+            else:
+                user_id = row[2]
+                user_name = row[7]
+                friend_id = row[1]
+                friend_name = row[6]
+            user_friend = {
+                "id": row[0],
+                "user_id": user_id,
+                "friend_id": friend_id,
+                "status": row[3],
+                "created_at": row[4],
+                "updated_at": row[5],
+                "user_name": user_name,
+                "friend_name": friend_name
+            }
+            requests_sent.append(user_friend)
+    except Exception as e:
+        flash('Error Al Listar Los Amigos Con Solicitud Pendiente: ' + str(e), 'danger')
+    list_friends = []
+    try:
+        sql_list_friends = """
+            SELECT user_friends.*, u1.name as user_name, u2.name as friend_name
+            FROM user_friends
+            JOIN users u1
+            ON user_friends.user_id = u1.id
+            JOIN users u2
+            ON user_friends.friend_id = u2.id
+            WHERE (user_friends.user_id = %s OR user_friends.friend_id = %s) AND user_friends.status = 'accepted'
+            ORDER BY user_friends.id DESC
+        """
+        cursor.execute(sql_list_friends, (id,id))
+        results = cursor.fetchall()
+        for row in results:
+            if current_user.id == row[1]:
+                user_id = row[1]
+                user_name = row[6]
+                friend_id = row[2]
+                friend_name = row[7]
+            else:
+                user_id = row[2]
+                user_name = row[7]
+                friend_id = row[1]
+                friend_name = row[6]
+            user_friend = {
+                "id": row[0],
+                "user_id": user_id,
+                "friend_id": friend_id,
+                "status": row[3],
+                "created_at": row[4],
+                "updated_at": row[5],
+                "user_name": user_name,
+                "friend_name": friend_name
+            }
+            list_friends.append(user_friend)
+    except Exception as e:
+        flash('Error Al Listar Tus Amigos: ' + str(e), 'danger')
+    data = {
+            "incoming_requests": incoming_requests,
+            "requests_sent": requests_sent,
+            "list_friends": list_friends
+        }
+    try:
+        return render_template('friends.html', data=data)
+    except Exception as e:
+        flash('Error Al Renderizar La Vista De Tus Amigos: ' + str(e), 'danger')
+    return redirect(request.referrer)
+
+@app.route('/send_friend_request/<int:friend_id>')
+def send_friend_request(friend_id):
+    createUserFriendsTable()
+    
+    cursor = con_bd.cursor()
+    user_id = current_user.id
+    status = 'pending'
+    now = datetime.now()
+
+    if user_id == None:
+        flash('Error Al Enviar La Solicitud De Amistad: No Hay Usuario Logueado', 'danger')
+        return redirect(url_for('home'))
+    if friend_id == None:
+        flash('Error Al Enviar La Solicitud De Amistad: Usuario no encontrado', 'danger')
+        return redirect(url_for('home'))
+    if get_user_friend_by_user_id_and_friend_id(user_id, friend_id):
+        flash('Error Al Enviar La Solicitud De Amistad: Ya Existe Una Solicitud De Amistad Entre Los Usuarios', 'danger')
+        return redirect(url_for('home'))
+    try:
+        sql = """
+            INSERT INTO user_friends (
+                user_id,
+                friend_id,
+                status,
+                created_at
+            )
+            VALUES
+            ( %s, %s, %s, %s);
+        """
+        cursor.execute(sql,(user_id, friend_id, status, now))
+        con_bd.commit()
+        flash('Solicitud De Amistad Enviada Correctamente', 'success')
+    except Exception as e:
+        flash('Error Al Enviar La Solicitud De Amistad: ' + str(e), 'danger')
+    return redirect(request.referrer)
+
+@app.route('/accept_friend_request/<int:user_friend_id>')
+def accept_friend_request(user_friend_id):
+    createUserFriendsTable()
+    cursor = con_bd.cursor()
+    status = 'accepted'
+    now = datetime.now()
+    try:
+        sql = """
+            UPDATE user_friends
+            SET status = %s, updated_at = %s
+            WHERE id = %s
+        """
+        cursor.execute(sql, (status, now, user_friend_id))
+        con_bd.commit()
+        flash('Solicitud De Amistad Aceptada Correctamente', 'success')
+    except Exception as e:
+        flash('Error Al Aceptar La Solicitud De Amistad: ' + str(e), 'danger')
+    return redirect(request.referrer)
+
+@app.route('/delete_friend_request/<int:user_friend_id>')
+def delete_friend_request(user_friend_id):
+    try:
+        cursor = con_bd.cursor()
+        sql = """
+            DELETE FROM user_friends
+            WHERE id = %s
+        """
+        cursor.execute(sql, (user_friend_id,))
+        con_bd.commit()
+        flash('Amigo Eliminado Correctamente', 'info')
+    except Exception as e:
+        flash('Error Al Eliminar El Amigo: ' + str(e), 'danger')
+    return redirect(request.referrer)
+
+
+def get_user_friend_by_user_id_and_friend_id(user_id_1, user_id_2):
+    createUserFriendsTable()
+    cursor = con_bd.cursor()
+    sql = """
+        SELECT user_friends.*, u1.name as user_name, u2.name as friend_name
+        FROM user_friends
+        JOIN users u1
+        ON user_friends.user_id = u1.id
+        JOIN users u2
+        ON user_friends.friend_id = u2.id
+        WHERE (user_friends.user_id = %s AND user_friends.friend_id = %s)
+        OR (user_friends.user_id = %s AND user_friends.friend_id = %s)
+        ORDER BY user_friends.id DESC
+    """
+    cursor.execute(sql, (user_id_1, user_id_2, user_id_2, user_id_1))
+    result = cursor.fetchone()
+    if result:
+        if current_user.id == result[1]:
+            user_id = result[1]
+            user_name = result[6]
+            friend_id = result[2]
+            friend_name = result[7]
+        else:
+            user_id = result[2]
+            user_name = result[7]
+            friend_id = result[1]
+            friend_name = result[6]
+        user_friend = {
+            "id": result[0],
+            "user_id": user_id,
+            "friend_id": friend_id,
+            "status": result[3],
+            "created_at": result[4],
+            "updated_at": result[5],
+            "user_name": user_name,
+            "friend_name": friend_name
+        }
+        return user_friend
+    else:
+        return None
+
 # Crear Tablas
 
 def crearTablaUsers():
@@ -312,19 +582,6 @@ def crearTablaUsers():
         created_at timestamp without time zone,
         updated_at timestamp without time zone,
         CONSTRAINT pk_user_id PRIMARY KEY (id)
-        );
-    ''')
-    con_bd.commit()
-
-def crearTablaProductos():
-    cursor = con_bd.cursor()
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS productos(
-        id serial NOT NULL,
-        nombreProducto character varying(100),
-        valorProducto integer,
-        cantidadProducto integer,
-        CONSTRAINT pk_productos_id PRIMARY KEY (id)
         );
     ''')
     con_bd.commit()

@@ -3,7 +3,21 @@
 {% block titulo %}{{ data.user.name }}{% endblock %}
 
 {% block body %}
-<h1>Perfil de {{ data.user.name }}</h1>
+{% include "partials/flash.html" %}
+{% if not data.is_my_profile %}
+    <h1>Perfil de {{ data.user.name }}</h1>
+    {% if data.friend_status == 'accept' %}
+    <a href="/delete_friend_request/{{ data.user_friend_id }}" class="btn btn-danger">Eliminar amigo</a>
+    {% elif data.friend_status == 'pending' %}
+    <a href="/delete_friend_request/{{ data.user_friend_id }}" class="btn btn-danger">Cancelar o rechazar solicitud de amistad</a>
+    {% else %}
+    <a href="/send_friend_request/{{ data.user.id }}" class="btn btn-primary">
+    Enviar invitación de amistad a {{ data.user.name }}
+    </a>
+    {% endif %}
+{% else %}
+    <h1>Mi perfil</h1>
+{% endif %}
 <div class="container pt-4">
     <div class="row">
         <div class="row">
@@ -12,7 +26,6 @@
                     <main class="form-signin w-100 m-auto">
                         <form action="/editar_user/{{current_user.id}}" method="POST" id="formulario">
                             <h1 class="h3 mb-3 fw-normal">Mis Datos</h1>
-                            {% include "partials/flash.html" %}
                             <div class="form-floating">
                                     <input type="text" class="form-control" name="name" placeholder="name" value="{{ current_user.name }}">
                                     <label for="floatingInput">Nombre</label>
@@ -56,6 +69,7 @@
                         <td>Opciones</td>
                     </thead>
                     <tbody>
+                    {% if data.posts %}
                         {% for post in data.posts %}
                         <tr>
                             <td id="tabla_user_id{{post[0]}}"><a href="{{ url_for('profile', id=post[1]) }}">{{ post[6] }}</a></td>
@@ -73,6 +87,11 @@
                             </td>
                         </tr>
                         {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="4">No has hecho ninguna publicación</td>
+                        </tr>
+                    {% endif %}
                     </tbody>
                 </table>
             </div>
