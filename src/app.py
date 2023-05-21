@@ -68,6 +68,63 @@ def home():
 
 # Users
 
+@app.route('/new_user')
+def new_user():
+    return render_template('auth/new.html')
+
+@app.route('/editar_user/<int:id>')
+def editar_user(id):
+    cursor = con_bd.cursor()
+    form = request.form
+    email = form['email']
+    password = User.passwordHash(form['password'])
+    name = form['name']
+    type_user = form['type_user']
+    now = datetime.now()
+    if email and password and name and type_user:
+        sql = """
+            UPDATE users
+            SET email = %s, password = %s, name = %s, type_user = %s, updated_at = %s
+            WHERE id = %s
+        """
+        cursor.execute(sql, (email, password, name, type_user, now, id))
+        con_bd.commit()
+        flash('Usuario Editado Correctamente', 'info')
+    else:
+        flash('Error Al Editar El Usuario', 'danger')
+    return redirect(request.referrer)
+
+@app.route('/profile/<int:id>')
+@login_required
+def profile(id):
+    createPostsTable()
+    cursor = con_bd.cursor()
+    sql = """
+        SELECT posts.*, users.name 
+        FROM posts 
+        JOIN users 
+        ON posts.user_id = users.id 
+        WHERE posts.user_id = %s 
+        ORDER BY posts.id DESC
+    """
+    cursor.execute(sql, (id,))
+    posts = cursor.fetchall()
+    
+    is_my_profile = id == current_user.id
+    user_friend = get_user_friend_by_user_id_and_friend_id(current_user.id, id) if not is_my_profile else None
+    friend_status = user_friend["status"] if user_friend else None
+    user_friend_id = user_friend["id"] if user_friend else None
+    data = {
+        'posts':posts,
+        'user': ModelUser.get_by_id(con_bd, id),
+        'is_my_profile': is_my_profile,
+        'friend_status': friend_status,
+        'user_friend_id': user_friend_id,
+    }
+    return render_template('profile.html', data = data)
+
+# Sesión
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     crearTablaUsers()
@@ -90,10 +147,6 @@ def login():
             return render_template('auth/login.html')
     else:
         return render_template('auth/login.html')
-
-@app.route('/new_user')
-def new_user():
-    return render_template('auth/new.html')
 
 @app.route('/signup', methods=['POST'])
 def add_user():
@@ -133,63 +186,11 @@ def add_user():
         flash('Error Al Registrar El Usuario', 'danger')
     return redirect(request.referrer)
 
-@app.route('/editar_user/<int:id>')
-def editar_user(id):
-    cursor = con_bd.cursor()
-    form = request.form
-    email = form['email']
-    password = User.passwordHash(form['password'])
-    name = form['name']
-    type_user = form['type_user']
-    now = datetime.now()
-    if email and password and name and type_user:
-        sql = """
-            UPDATE users
-            SET email = %s, password = %s, name = %s, type_user = %s, updated_at = %s
-            WHERE id = %s
-        """
-        cursor.execute(sql, (email, password, name, type_user, now, id))
-        con_bd.commit()
-        flash('Usuario Editado Correctamente', 'info')
-    else:
-        flash('Error Al Editar El Usuario', 'danger')
-    return redirect(request.referrer)
-
-
 @app.route('/logout')
 def logout():
     logout_user()
     flash("Sesión cerrada correctamente", "success")
     return redirect(url_for('login'))
-
-@app.route('/profile/<int:id>')
-@login_required
-def profile(id):
-    createPostsTable()
-    cursor = con_bd.cursor()
-    sql = """
-        SELECT posts.*, users.name 
-        FROM posts 
-        JOIN users 
-        ON posts.user_id = users.id 
-        WHERE posts.user_id = %s 
-        ORDER BY posts.id DESC
-    """
-    cursor.execute(sql, (id,))
-    posts = cursor.fetchall()
-    
-    is_my_profile = id == current_user.id
-    user_friend = get_user_friend_by_user_id_and_friend_id(current_user.id, id) if not is_my_profile else None
-    friend_status = user_friend["status"] if user_friend else None
-    user_friend_id = user_friend["id"] if user_friend else None
-    data = {
-        'posts':posts,
-        'user': ModelUser.get_by_id(con_bd, id),
-        'is_my_profile': is_my_profile,
-        'friend_status': friend_status,
-        'user_friend_id': user_friend_id,
-    }
-    return render_template('profile.html', data = data)
     
 # Posts
 
@@ -638,11 +639,15 @@ def createAcademicFileTable():
     ''')
     con_bd.commit()
 
+# Errores
+
 def status_401(error):
     return redirect(url_for('login'))
 
 def status_404(error):
     return "<h1>Página no encontrada</h1>", 404
+
+# Iniciar Aplicación
 
 if __name__ == '__main__':
     app.config.from_object(config['development'])
