@@ -4,6 +4,7 @@
 
 {% block body %}
 {% include "partials/flash.html" %}
+{% include "partials/modal_image.html" %}
 <h1>Muro</h1>
 <div class="container pt-4">
     <div class="row">
@@ -18,7 +19,8 @@
                         </div>
                         <img id="form_post_content_image" src="" class="d-none" id="preview" alt="Preview" width="200px" height="200px">
                         <div class="form-floating">
-                            <input type="file" class="form-control" id="form_post_content" name="content" placeholder="Contenido" accept=".jpg .jpeg .png .gif .mp4">
+                            <!-- ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'mp4', 'docx', 'pdf', 'txt', 'xlsx', 'pptx', 'zip', 'rar'} -->
+                            <input type="file" class="form-control" id="form_post_content" name="content" placeholder="Contenido" accept="image/*,.png,.jpg,.jpeg,.gif,.mp4,.docx,.pdf,.txt,.xlsx,.pptx,.zip,.rar">
                             <label for="floatingInput">Contenido</label>
                         </div>
 
@@ -44,7 +46,11 @@
                             <td id="tabla_description{{post['id']}}">{{ post['description'] }}</td>
                             <td id="tabla_content{{post['id']}}">
                                 {% if post['content'] %}
-                                <img src="{{ url_for( 'static', filename='uploads/' + post['content'] ) }}" alt="Imagen" width="125px" height="125px">
+                                    {% if post['content'].endswith(('.png', '.jpg', '.jpeg', '.gif')) %}
+                                        <img class="cursor-pointer" src="{{ url_for( 'static', filename='uploads/' + post['content'] ) }}" alt="Imagen de: {{ post['user_name'] }}" width="125px" height="125px" onclick="OpenModalImage('tabla_img{{ post["id"] }}')" id="tabla_img{{ post['id'] }}">
+                                    {% else %}
+                                        <a href="{{ url_for( 'static', filename='uploads/' + post['content'] ) }}" download>Descargar: {{ academic_file['name'] }}</a>
+                                    {% endif %}
                                 {% endif %}
                             </td>
                             <td>

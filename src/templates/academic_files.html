@@ -1,0 +1,97 @@
+{% extends './layout.html' %}
+
+{% block titulo %}
+Archivos Académicos
+{% endblock %}
+
+{% block body %}
+{% include "partials/modal_image.html" %}
+{% include "partials/flash.html" %}
+<h1>Archivos Académicos</h1>
+<div class="container pt-4">
+    <div class="row">
+        <div class="row">
+            <div class="col-md-4">
+                <main class="form-signin w-100 m-auto">
+                    <form action="/create_academic_file" method="POST" id="formulario" enctype="multipart/form-data">
+                        <h1 class="h3 mb-3 fw-normal">Nuevo archivo académico</h1>
+                        <div class="form-floating">
+                            <!-- <input type="text" class="form-control" id="form_academic_file_teacher_id" name="teacher_id" placeholder="Profesor"> -->
+                            <select class="form-select" id="form_academic_file_teacher_id" name="teacher_id" aria-label="Profesor">
+                                <option value="">Seleccionar profesor</option>
+                                {% for teacher in data.all_teachers %}
+                                <option value="{{ teacher['id'] }}">{{ teacher['name'] }} ({{ teacher['email'] }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-floating">
+                            <input type="text" class="form-control" id="form_academic_file_name" name="name" placeholder="Título">
+                            <label for="floatingInput">Título</label>
+                        </div>
+                        <img id="form_academic_file_content_image" src="" class="d-none" id="preview" alt="Preview" width="200px" height="200px">
+                        <div class="form-floating">
+                            <!-- ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'mp4', 'docx', 'pdf', 'txt', 'xlsx', 'pptx', 'zip', 'rar'} -->
+                            <input type="file" class="form-control" id="form_academic_file_content" name="content" placeholder="Contenido" accept="image/*,.png,.jpg,.jpeg,.gif,.mp4,.docx,.pdf,.txt,.xlsx,.pptx,.zip,.rar">
+                            <label for="floatingInput">Contenido</label>
+                        </div>
+                        <button id="btn" class="w-100 btn btn-lg btn-primary" type="submit">Guardar Cambios</button>
+                    </form>
+                </main>
+            </div>
+
+
+            <!-- TODO Mejorar visualización de los archivos -->
+            <div class="col-md-8">
+                <h2>Mis Archivos Académicos</h2>
+                <table class="table table-striped">
+                    <thead>
+                        <td>Profesor</td>
+                        <td>Título</td>
+                        <td>Contenido</td>
+                        <td>Creado</td>
+                        <td>Actualizado</td>
+                        <td>Acciones</td>
+                    </thead>
+                    <tbody>
+                    {% if data.academic_files %}
+                        {% for academic_file in data.academic_files %}
+                        <tr>
+                            <!-- id oculto -->
+                            <span id="tabla_teacher_id{{academic_file['id']}}" class="d-none">{{ academic_file['teacher_id'] }}</span>
+                            <td id="tabla_teacher_name{{academic_file['id']}}"><a href="{{ url_for('profile', id=academic_file['teacher_id']) }}">{{ academic_file['teacher_name'] }}</a></td>
+                            <td id="tabla_name{{academic_file['id']}}">{{ academic_file['name'] }}</td>
+                            <td id="tabla_content{{academic_file['id']}}">
+                                {% if academic_file['content'] %}
+                                    {% if academic_file['content'].endswith(('.png', '.jpg', '.jpeg', '.gif')) %}
+                                        <img class="cursor-pointer" src="{{ url_for( 'static', filename='uploads/' + academic_file['content'] ) }}" alt="Imagen: {{ academic_file['name'] }}" width="125px" height="125px" onclick="OpenModalImage('tabla_img{{ academic_file["id"] }}')" id="tabla_img{{ academic_file['id'] }}">
+                                    {% else %}
+                                        <a href="{{ url_for( 'static', filename='uploads/' + academic_file['content'] ) }}" download>Descargar: {{ academic_file['name'] }}</a>
+                                    {% endif %}
+                                {% endif %}
+                            </td>
+                            <td id="tabla_created_at{{academic_file['id']}}">{{ academic_file['created_at'].strftime("%Y-%m-%d %H:%M:%S") if academic_file['created_at'] else "No especificado" }}</td>
+                            <td id="tabla_updated_at{{academic_file['id']}}">{{ academic_file['updated_at'].strftime("%Y-%m-%d %H:%M:%S") if academic_file['updated_at'] else "No especificado" }}</td>
+                            <td>
+                                {% if current_user.id == academic_file['user_id'] %}
+                                    <a class="btn btn-secondary btn-sm" onclick="editAcademicFile('{{ academic_file["id"] }}')">Editar</a>
+                                {% endif %}
+                                <!-- Solo puede borrar publicaciones si es profesor o es el autor -->
+                                {% if current_user.type_user == "teacher" or current_user.id == academic_file['user_id'] %}
+                                    <a class="btn btn-danger btn-delete btn-sm" href="/eliminar_academic_file/{{academic_file['id']}}">Eliminar</a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="6">No hay archivos académicos</td>
+                        </tr>
+                    {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="{{ url_for('static', filename='js/academic_files.js') }}"></script>
+{% endblock %}

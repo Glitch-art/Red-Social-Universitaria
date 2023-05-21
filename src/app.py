@@ -20,7 +20,7 @@ def load_user(id):
 
 # Constantes
 
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif' 'mp4'}
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'mp4', 'docx', 'pdf', 'txt', 'xlsx', 'pptx', 'zip', 'rar'}
 
 # --------------------------------------------------
 # Rutas de la aplicación
@@ -570,6 +570,189 @@ def get_user_friend_by_user_id_and_friend_id(user_id_1, user_id_2):
     else:
         return None
 
+# Academic Files
+
+@app.route('/academic_files')
+def academic_files():
+    crearTablaUsers()
+    createAcademicFileTable()
+    if not current_user.id:
+        flash('Error Al Listar Los Amigos: No Hay Usuario Logueado', 'danger')
+        return redirect(request.referrer)
+    cursor = con_bd.cursor()
+    all_teachers = []
+    try:
+        sql_all_teachers = """
+            SELECT *
+            FROM users
+            WHERE type_user = %s
+        """
+        cursor.execute(sql_all_teachers, ("teacher",))
+        results = cursor.fetchall()
+
+        for row in results:
+            teacher = {
+                "id": row[0],
+                "email": row[1],
+                # "password": row[2],
+                "name": row[3]
+                # "type_user": row[4],
+                # "created_at": row[5],
+                # "updated_at": row[6]
+            }
+            all_teachers.append(teacher)
+    except Exception as e:
+        flash('Error Al Listar Los Profesores: ' + str(e), 'danger')
+    academic_files = []
+    try:
+        user_id = current_user.id
+        sql_academic_files = """
+            SELECT academic_files.*, users.name
+            FROM academic_files
+            JOIN users
+            ON academic_files.teacher_id = users.id
+            WHERE academic_files.user_id = %s
+            ORDER BY academic_files.id DESC
+        """
+        cursor.execute(sql_academic_files, (user_id,))
+        results = cursor.fetchall()
+        for row in results:
+            academic_file = {
+                "id" : row[0],
+                "user_id" : row[1],
+                "teacher_id" : row[2],
+                "teacher_name" : row[7] if row[7] else None,
+                "name" : row[3],
+                "content" : row[4],
+                "created_at" : row[5],
+                "updated_at" : row[6]
+            }
+            academic_files.append(academic_file)
+    except Exception as e:
+        flash('Error Al Listar Los Archivos Académicos: ' + str(e), 'danger')
+    
+    data = {
+        "all_teachers": all_teachers,
+        "academic_files": academic_files
+    }
+    try:
+        return render_template('academic_files.html', data=data)
+    except Exception as e:
+        flash('Error Al Renderizar La Vista De Archivos Académicos: ' + str(e), 'danger')
+    return redirect(request.referrer)
+
+@app.route('/create_academic_file', methods=['POST'])
+def create_academic_file():
+    createAcademicFileTable()
+    cursor = con_bd.cursor()
+    form = request.form
+    user_id = current_user.id
+    teacher_id = form['teacher_id']
+    name = form['name']
+    content = request.files['content']
+    now = datetime.now()
+
+    if user_id == None:
+        flash('Error Al Crear El Archivo Académico: No Hay Usuario Logueado', 'danger')
+        return redirect(request.referrer)
+    if content:
+        filename = secure_filename(content.filename)
+        if allowed_file(filename) == False:
+            flash('Error Al Crear El Archivo Académico: El Archivo No Es Valido', 'danger')
+            return redirect(request.referrer)
+        base_path = os.path.dirname(__file__)
+        filename_complete = create_filename_complete(filename)
+        createUploadsFolder()
+        content_route = os.path.join(base_path, app.config['UPLOAD_FOLDER'], filename_complete)
+        try:
+            content.save(content_route)
+        except Exception as e:
+            flash('Error Al Guardar El Contenido Del Archivo Académico: ' + str(e), 'danger')
+    else:
+        filename_complete = ""
+    try:
+        sql = """
+            INSERT INTO
+            academic_files (
+                user_id,
+                teacher_id,
+                name,
+                content,
+                created_at
+            )
+            VALUES
+            ( %s, %s, %s, %s, %s );
+        """
+        cursor.execute(sql,(user_id, teacher_id, name, filename_complete, now))
+        con_bd.commit()
+        flash('Archivo Académico Creado Correctamente', 'success')
+        return redirect(url_for('academic_files'))
+    except Exception as e:
+        flash('Error Al Crear El Archivo Académico: ' + str(e), 'danger')
+    return redirect(request.referrer)
+
+@app.route('/edit_academic_file/<int:academic_file_id>', methods=['POST'])
+def edit_academic_file(academic_file_id):
+    createAcademicFileTable()
+    cursor = con_bd.cursor()
+    form = request.form
+    user_id = current_user.id
+    teacher_id = form['teacher_id']
+    name = form['name']
+    content = request.files['content']
+    now = datetime.now()
+
+    if user_id == None:
+        flash('Error Al Modificar El Archivo Académico: No Hay Usuario Logueado', 'danger')
+        return redirect(request.referrer)
+    if content:
+        filename = secure_filename(content.filename)
+        if allowed_file(filename) == False:
+            flash('Error Al Modificar El Archivo Académico: El Archivo No Es Valido', 'danger')
+            return redirect(request.referrer)
+        base_path = os.path.dirname(__file__)
+        filename_complete = create_filename_complete(filename)
+        createUploadsFolder()
+        content_route = os.path.join(base_path, app.config['UPLOAD_FOLDER'], filename_complete)
+        try:
+            content.save(content_route)
+            sql = """
+                UPDATE academic_files
+                SET teacher_id=%s, name=%s, content=%s, updated_at=%s
+                WHERE id = %s
+            """
+            cursor.execute(sql,(teacher_id, name, filename_complete, now, academic_file_id))
+        except Exception as e:
+            flash('Error Al Modificar El Archivo Académico: ' + str(e), 'danger')
+    else:
+        sql = """
+            UPDATE academic_files
+            SET teacher_id=%s, name=%s, updated_at=%s
+            WHERE id = %s
+        """
+        cursor.execute(sql,(teacher_id, name, now, academic_file_id))
+    try:
+        con_bd.commit()
+        flash('Archivo Académico Modificado Correctamente', 'success')
+        return redirect(url_for('academic_files'))
+    except Exception as e:
+        flash('Error Al Modificar El Archivo Académico: ' + str(e), 'danger')
+    return redirect(request.referrer)
+
+@app.route('/eliminar_academic_file/<int:academic_file_id>')
+def eliminar_academic_file(academic_file_id):
+    try:
+        cursor = con_bd.cursor()
+        sql = "DELETE FROM academic_files WHERE id = {0}".format(academic_file_id)
+        cursor.execute(sql)
+        con_bd.commit()
+        flash('Archivo Académico Eliminado Correctamente', 'info')
+        return redirect(url_for('home'))
+    except Exception as e:
+        flash('Error Al Eliminar El Archivo Académico: ' + str(e), 'danger')
+        return request.referrer
+
+
 # Crear Tablas
 
 def crearTablaUsers():
@@ -624,7 +807,7 @@ def createPostsTable():
 def createAcademicFileTable():
     cursor = con_bd.cursor()
     cursor.execute('''
-        CREATE TABLE IF NOT EXISTS academic_file(
+        CREATE TABLE IF NOT EXISTS academic_files(
         id serial NOT NULL,
         user_id integer NOT NULL,
         teacher_id integer NOT NULL,
