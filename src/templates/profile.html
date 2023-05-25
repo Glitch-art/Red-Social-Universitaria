@@ -2,6 +2,10 @@
 
 {% block titulo %}{{ data.user.name }}{% endblock %}
 
+{% block css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/home.css')}}">
+{% endblock %}
+
 {% block body %}
 {% include "partials/flash.html" %}
 {% include "partials/modal_image.html" %}
@@ -23,31 +27,33 @@
     <div class="row">
         <div class="row">
             {% if data.is_my_profile %}
-                <div class="col-md-4">
+                <div class="">
                     <main class="form-signin w-100 m-auto">
                         <form action="/editar_user/{{current_user.id}}" method="POST" id="formulario">
                             <h1 class="h3 mb-3 fw-normal">Mis Datos</h1>
-                            <div class="form-floating">
-                                    <input type="text" class="form-control" name="name" placeholder="name" value="{{ current_user.name }}">
-                                    <label for="floatingInput">Nombre</label>
+                            <div class="container-form-editar">
+                                <div class="form-floating">
+                                        <input type="text" class="form-control" name="name" placeholder="name" value="{{ current_user.name }}">
+                                        <label for="floatingInput">Nombre</label>
+                                </div>
+                                <div class="form-floating">
+                                        <input type="email" class="form-control" id="floatingInput" name="email" placeholder="name@example.com" value="{{ current_user.email }}">
+                                        <label for="floatingInput">Email</label>
+                                </div>
+                                <div class="form-floating">
+                                        <input type="password" class="form-control" id="floatingPassword" name="password" placeholder="Contraseña">
+                                        <label for="floatingPassword">Contraseña</label>
+                                </div>
+                                <div class="form-floating">
+                                    <select class="form-select" name="type_user" aria-label="Tipo de usuario">
+                                        <option value="">Seleccionar</option>
+                                        <option value="student" {% if current_user.type_user == 'student' %}selected{% endif %}>Estudiante</option>
+                                        <option value="teacher" {% if current_user.type_user == 'teacher' %}selected{% endif %}>Profesor</option>
+                                    </select>
+                                    <label for="floatingSelect">Tipo de usuario</label>
+                                </div>
+                                <button id="btn" class="w-100 btn btn-lg btn-primary" type="submit">Guardar Cambios</button>
                             </div>
-                            <div class="form-floating">
-                                    <input type="email" class="form-control" id="floatingInput" name="email" placeholder="name@example.com" value="{{ current_user.email }}">
-                                    <label for="floatingInput">Email</label>
-                            </div>
-                            <div class="form-floating">
-                                    <input type="password" class="form-control" id="floatingPassword" name="password" placeholder="Contraseña">
-                                    <label for="floatingPassword">Contraseña</label>
-                            </div>
-                            <div class="form-floating">
-                                <select class="form-select" name="type_user" aria-label="Tipo de usuario">
-                                    <option value="">Seleccionar</option>
-                                    <option value="student" {% if current_user.type_user == 'student' %}selected{% endif %}>Estudiante</option>
-                                    <option value="teacher" {% if current_user.type_user == 'teacher' %}selected{% endif %}>Profesor</option>
-                                </select>
-                                <label for="floatingSelect">Tipo de usuario</label>
-                            </div>
-                            <button id="btn" class="w-100 btn btn-lg btn-primary" type="submit">Guardar Cambios</button>
                         </form>
                     </main>
                 </div>
@@ -56,10 +62,10 @@
 
             <!-- TODO Mejorar visualizacion de las publicaciones -->
             {% if data.is_my_profile %}
-            <div class="col-md-8">
+            <div class="col-md-8" style="display: none;">
                 <h2>Mis Publicaciones</h2>
             {% else %}
-            <div class="col-md-12">
+            <div class="col-md-12" style="display: none;">
                 <h2>Publicaciones de {{ data.user.name }}</h2>
             {% endif %}
                 <table class="table table-striped">
@@ -100,6 +106,67 @@
                     </tbody>
                 </table>
             </div>
+
+
+            {% if data.posts %}
+                {% for post in data.posts %}
+
+                <div class="card my-4">
+                    <!-- Card header START -->
+                    <div class="card-header border-0 pb-0">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div class="d-flex align-items-center">
+                                <!-- Avatar -->
+                                <div class="d-flex justify-content-center align-items-center me-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" class="bi bi-postcard avatar-img" viewBox="0 0 16 16">
+                                        <path fill-rule="evenodd" d="M2 2a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H2ZM1 4a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V4Zm7.5.5a.5.5 0 0 0-1 0v7a.5.5 0 0 0 1 0v-7ZM2 5.5a.5.5 0 0 1 .5-.5H6a.5.5 0 0 1 0 1H2.5a.5.5 0 0 1-.5-.5Zm0 2a.5.5 0 0 1 .5-.5H6a.5.5 0 0 1 0 1H2.5a.5.5 0 0 1-.5-.5Zm0 2a.5.5 0 0 1 .5-.5H6a.5.5 0 0 1 0 1H2.5a.5.5 0 0 1-.5-.5ZM10.5 5a.5.5 0 0 0-.5.5v3a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-3a.5.5 0 0 0-.5-.5h-3ZM13 8h-2V6h2v2Z"/>
+                                    </svg>
+                                </div>
+                                <!-- Info -->
+                                <div>
+                                    <div class="nav nav-divider">
+                                        <h6 class="nav-item card-title mb-0"> <a href="{{ url_for('profile', id=post[1]) }}"> {{ post[6] }} </a></h6>
+                                        <span class="nav-item small"> {{ post[4].strftime("%Y-%m-%d %H:%M")}} </span>
+                                    </div>
+                                    <p class="mb-0 small">{{ "Profesor" if post[8] == "teacher" else "Estudiante" }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Card header END -->
+                    <!-- Card body START -->
+                    <div class="card-body">
+                        <p>{{ post[2] }}</p>
+                        <!-- Card img -->
+                        {% if post[3] %}
+                            {% if post[3].endswith(('.png', '.jpg', '.jpeg', '.gif')) %}
+                                <img class="cursor-pointer" src="{{ url_for( 'static', filename='uploads/' + post[3] ) }}" alt="Imagen de: {{ post[6] }}" width="512px" height="512px" onclick="OpenModalImage('tabla_img{{ post[0] }}')" id="tabla_img{{ post[0] }}">
+                            {% else %}
+                                <a href="{{ url_for( 'static', filename='uploads/' + post[3] ) }}" download>Descargar: {{ academic_file['name'] }}</a>
+                            {% endif %}
+                        {% endif %}
+                        <!-- Feed react START -->
+                        <ul class="nav nav-stack py-3 small">
+                            <li class="nav-item me-3">
+                                <!-- Solo puede borrar publicaciones si es profesor o es el autor -->
+                                {% if current_user.type_user == "teacher" or current_user.id == post[1] %}
+                                    <a class="btn btn-danger btn-delete btn-sm" href="/eliminar_post/{{post[0]}}">Eliminar</a>
+                                {% endif %}
+                            </li>
+                        </ul>
+                        <!-- Feed react END -->
+                    </div>
+                    <!-- Card body END -->
+                </div>
+
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="4">No hay publicaciones</td>
+                </tr>
+            {% endif %}
+
+
         </div>
     </div>
 </div>

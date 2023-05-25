@@ -19,28 +19,30 @@
 
     {% include "partials/flash.html" %}
 
-    <div class="form-floating">
-      <input type="text" class="form-control" name="name" placeholder="name">
-      <label for="floatingInput">Nombre</label>
+    <div class="container-form-registro">
+      <div class="form-floating">
+        <input type="text" class="form-control" name="name" placeholder="name">
+        <label for="floatingInput">Nombre</label>
+      </div>
+      <div class="form-floating">
+        <input type="email" class="form-control" id="floatingInput" name="email" placeholder="name@example.com">
+        <label for="floatingInput">Email</label>
+      </div>
+      <div class="form-floating">
+        <input type="password" class="form-control" id="floatingPassword" name="password" placeholder="Contraseña">
+        <label for="floatingPassword">Contraseña</label>
+      </div>
+      <div class="form-floating">
+        <select class="form-select" name="type_user" aria-label="Tipo de usuario">
+            <option value="">Seleccionar</option>
+            <option value="student">Estudiante</option>
+            <option value="teacher">Profesor</option>
+        </select>
+        <label for="floatingSelect">Tipo de usuario</label>
+      </div>
+  
+      <button class="w-100 btn btn-lg btn-primary" type="submit">Registrar</button>
     </div>
-    <div class="form-floating">
-      <input type="email" class="form-control" id="floatingInput" name="email" placeholder="name@example.com">
-      <label for="floatingInput">Email</label>
-    </div>
-    <div class="form-floating">
-      <input type="password" class="form-control" id="floatingPassword" name="password" placeholder="Contraseña">
-      <label for="floatingPassword">Contraseña</label>
-    </div>
-    <div class="form-floating">
-      <select class="form-select" name="type_user" aria-label="Tipo de usuario">
-          <option value="">Seleccionar</option>
-          <option value="student">Estudiante</option>
-          <option value="teacher">Profesor</option>
-      </select>
-      <label for="floatingSelect">Tipo de usuario</label>
-    </div>
-
-    <button class="w-100 btn btn-lg btn-primary" type="submit">Registrar</button>
   </form>
 </main>
 

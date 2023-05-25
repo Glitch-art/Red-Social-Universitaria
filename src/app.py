@@ -40,7 +40,7 @@ def index():
 def home():
     cursor = con_bd.cursor()
     sql = """
-        SELECT posts.*, users.name
+        SELECT posts.*, users.name, users.type_user
         FROM posts
         JOIN users
         ON posts.user_id = users.id
@@ -58,7 +58,8 @@ def home():
             "content": row[3],
             "created_at": row[4],
             "updated_at": row[5],
-            "user_name": row[6]
+            "user_name": row[6],
+            "type_user": row[7]
         }
         posts.append(post)
     data = {
@@ -100,7 +101,7 @@ def profile(id):
     createPostsTable()
     cursor = con_bd.cursor()
     sql = """
-        SELECT posts.*, users.name 
+        SELECT posts.*, users.name, users.type_user
         FROM posts 
         JOIN users 
         ON posts.user_id = users.id 
@@ -119,7 +120,7 @@ def profile(id):
         'user': ModelUser.get_by_id(con_bd, id),
         'is_my_profile': is_my_profile,
         'friend_status': friend_status,
-        'user_friend_id': user_friend_id,
+        'user_friend_id': user_friend_id, 
     }
     return render_template('profile.html', data = data)
 
@@ -607,7 +608,7 @@ def academic_files():
     try:
         user_id = current_user.id
         sql_academic_files = """
-            SELECT academic_files.*, users.name
+            SELECT academic_files.*, users.name , users.type_user
             FROM academic_files
             JOIN users
             ON academic_files.teacher_id = users.id
@@ -625,7 +626,8 @@ def academic_files():
                 "name" : row[3],
                 "content" : row[4],
                 "created_at" : row[5],
-                "updated_at" : row[6]
+                "updated_at" : row[6],
+                "type_user" : row[8]
             }
             academic_files.append(academic_file)
     except Exception as e:
@@ -831,6 +833,14 @@ def status_404(error):
     return "<h1>Página no encontrada</h1>", 404
 
 # Iniciar Aplicación
+
+@app.before_first_request
+def inicializar_proyecto():
+    crearTablaUsers()
+    createUserFriendsTable()
+    createPostsTable()
+    createAcademicFileTable()
+
 
 if __name__ == '__main__':
     app.config.from_object(config['development'])

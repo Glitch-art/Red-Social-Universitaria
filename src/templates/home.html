@@ -2,6 +2,10 @@
 
 {% block titulo %}Home{% endblock %}
 
+{% block css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/home.css')}}">
+{% endblock %}
+
 {% block body %}
 {% include "partials/flash.html" %}
 {% include "partials/modal_image.html" %}
@@ -9,27 +13,27 @@
 <div class="container pt-4">
     <div class="row">
         <div class="row">
-            <div class="col-md-4">
+            <div class="">
                 <main class="form-signin w-100 m-auto">
-                    <form action="/create_post" method="POST" id="formulario" enctype="multipart/form-data">
+                    <form action="/create_post" method="POST"  enctype="multipart/form-data">
                         <h1 class="h3 mb-3 fw-normal">Nueva publicación</h1>
                         <div class="form-floating">
-                            <input type="text" class="form-control" id="form_post_description" name="description" placeholder="Descripción">
+                            <input type="text" class="form-control"  name="description" placeholder="Descripción">
                             <label for="floatingInput">Descripción</label>
                         </div>
-                        <img id="form_post_content_image" src="" class="d-none" id="preview" alt="Preview" width="200px" height="200px">
+                        <img src="" class="d-none"  alt="Preview" width="200px" height="200px">
                         <div class="form-floating">
                             <!-- ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'mp4', 'docx', 'pdf', 'txt', 'xlsx', 'pptx', 'zip', 'rar'} -->
-                            <input type="file" class="form-control" id="form_post_content" name="content" placeholder="Contenido" accept="image/*,.png,.jpg,.jpeg,.gif,.mp4,.docx,.pdf,.txt,.xlsx,.pptx,.zip,.rar">
+                            <input type="file" class="form-control"  name="content" placeholder="Contenido" accept="image/*,.png,.jpg,.jpeg,.gif,.mp4,.docx,.pdf,.txt,.xlsx,.pptx,.zip,.rar">
                             <label for="floatingInput">Contenido</label>
                         </div>
 
-                        <button id="btn" class="w-100 btn btn-lg btn-primary" type="submit">Publicar</button>
+                        <button  class="w-100 btn btn-lg btn-primary" type="submit">Publicar</button>
                     </form>
                 </main>
             </div>
 
-            <div class="col-md-8">
+            <div class="col-md-8" style="display: none;">
                 <h2>Publicaciones</h2>
                 <table class="table table-striped">
                     <thead>
@@ -72,8 +76,109 @@
                     </tbody>
                 </table>
             </div>
+
+
+            {% if data.posts %}
+                {% for post in data.posts %}
+
+                <div class="card my-4">
+                    <!-- Card header START -->
+                    <div class="card-header border-0 pb-0">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div class="d-flex align-items-center">
+                                <!-- Avatar -->
+                                <div class="d-flex justify-content-center align-items-center me-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" class="bi bi-postcard avatar-img" viewBox="0 0 16 16">
+                                        <path fill-rule="evenodd" d="M2 2a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H2ZM1 4a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V4Zm7.5.5a.5.5 0 0 0-1 0v7a.5.5 0 0 0 1 0v-7ZM2 5.5a.5.5 0 0 1 .5-.5H6a.5.5 0 0 1 0 1H2.5a.5.5 0 0 1-.5-.5Zm0 2a.5.5 0 0 1 .5-.5H6a.5.5 0 0 1 0 1H2.5a.5.5 0 0 1-.5-.5Zm0 2a.5.5 0 0 1 .5-.5H6a.5.5 0 0 1 0 1H2.5a.5.5 0 0 1-.5-.5ZM10.5 5a.5.5 0 0 0-.5.5v3a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-3a.5.5 0 0 0-.5-.5h-3ZM13 8h-2V6h2v2Z"/>
+                                    </svg>
+                                </div>
+                                <!-- Info -->
+                                <div>
+                                    <div class="nav nav-divider">
+                                        <h6 class="nav-item card-title mb-0"> <a href="{{ url_for('profile', id=post['user_id']) }}"> {{ post['user_name'] }} </a></h6>
+                                        <span class="nav-item small"> {{ post['created_at'].strftime("%Y-%m-%d %H:%M")}} </span>
+                                    </div>
+                                    <p class="mb-0 small">{{ "Profesor" if post['type_user'] == "teacher" else "Estudiante" }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Card header END -->
+                    <!-- Card body START -->
+                    <div class="card-body">
+                        <p>{{ post['description'] }}</p>
+                        <!-- Card img -->
+                        {% if post['content'] %}
+                            {% if post['content'].endswith(('.png', '.jpg', '.jpeg', '.gif')) %}
+                                <img class="cursor-pointer" src="{{ url_for( 'static', filename='uploads/' + post['content'] ) }}" alt="Imagen de: {{ post['user_name'] }}" width="512px" height="512px" onclick="OpenModalImage('tabla_img{{ post["id"] }}')" id="tabla_img{{ post['id'] }}">
+                            {% else %}
+                                <a href="{{ url_for( 'static', filename='uploads/' + post['content'] ) }}" download>Descargar: {{ academic_file['name'] }}</a>
+                            {% endif %}
+                        {% endif %}
+                        <!-- Feed react START -->
+                        <ul class="nav nav-stack py-3 small">
+                            <li class="nav-item me-3">
+                                {% if current_user.id == post['user_id'] %}
+                                    <a class="btn btn-secondary btn-sm" onclick="editPost('{{ post["id"] }}')" data-bs-toggle="modal" data-bs-target="#staticBackdrop">Editar</a>
+                                {% endif %}
+                            </li>
+                            <li class="nav-item me-3">
+                                    <!-- Solo puede borrar publicaciones si es profesor o es el autor -->
+                                {% if current_user.type_user == "teacher" or current_user.id == post['user_id'] %}
+                                    <a class="btn btn-danger btn-delete btn-sm" href="/eliminar_post/{{post['id']}}">Eliminar</a>
+                                {% endif %}
+                            </li>
+                        </ul>
+                        <!-- Feed react END -->
+                    </div>
+                    <!-- Card body END -->
+                </div>
+
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="4">No hay publicaciones</td>
+                </tr>
+            {% endif %}
+
         </div>
     </div>
 </div>
+
+<!-- Modal -->
+<div class="modal fade pt-2" style="z-index: 20;" id="staticBackdrop" data-bs-backdrop="false" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="staticBackdropLabel">Actualizar publicación</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+            <div class="">
+                <main class="form-signin w-100 m-auto">
+                    <form action="/create_post" method="POST" id="formulario" enctype="multipart/form-data">
+                        <div class="form-floating">
+                            <input type="text" class="form-control" id="form_post_description" name="description" placeholder="Descripción">
+                            <label for="floatingInput">Descripción</label>
+                        </div>
+                        <img id="form_post_content_image" src="" class="d-none" id="preview" alt="Preview" width="200px" height="200px">
+                        <div class="form-floating">
+                            <!-- ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'mp4', 'docx', 'pdf', 'txt', 'xlsx', 'pptx', 'zip', 'rar'} -->
+                            <input type="file" class="form-control" id="form_post_content" name="content" placeholder="Contenido" accept="image/*,.png,.jpg,.jpeg,.gif,.mp4,.docx,.pdf,.txt,.xlsx,.pptx,.zip,.rar">
+                            <label for="floatingInput">Contenido</label>
+                        </div>
+
+                        <button id="btn" class="w-100 btn btn-lg btn-primary" type="submit">Publicar</button>
+                    </form>
+                </main>
+            </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+</div>
+
 <script src="{{ url_for('static', filename='js/home.js')}}"></script>
 {% endblock %}
