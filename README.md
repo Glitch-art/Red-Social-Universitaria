@@ -8,6 +8,23 @@ Una plataforma diseñada para conectar estudiantes, profesores y personal admini
 
 La Red Social Universitaria tiene como objetivo facilitar la comunicación y colaboración entre los miembros de la comunidad universitaria. Aquí, los usuarios pueden compartir recursos, discutir sobre temas académicos y participar en actividades universitarias.
 
+### 📸 Capturas de pantalla
+
+*Página de login*
+![Captura de la página de login](assets/screenshot0.PNG)
+
+*Página de inicio*
+![Captura de la página de inicio](assets/screenshot1.PNG)
+
+*Sección de amigos*
+![Captura de la sección de amigos](assets/screenshot2.PNG)
+
+*Sección de archivos académicos*
+![Captura de la sección de archivos académicos](assets/screenshot3.PNG)
+
+*Página de perfil*
+![Captura de la página de perfil](assets/screenshot4.PNG)
+
 ---
 
 ## 🛠 Requerimientos
@@ -53,13 +70,23 @@ Linux/Mac:
 source env/bin/activate
 ```
 
-### 5. Instalar las dependencias
+### 5. Actualizar pip
+
+```bash
+python.exe -m pip install --upgrade pip
+```
+
+### 6. Instalar las dependencias
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 6. Ejecutar el proyecto
+### 7. Crea la base de datos segun el archivo config
+
+![config.py](src/config.py)
+
+### 8. Ejecutar el proyecto
 
 ```bash
 python src/app.py

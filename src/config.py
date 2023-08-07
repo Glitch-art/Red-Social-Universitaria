@@ -15,7 +15,7 @@ HOST = 'localhost'
 PORT = '5432'
 BD = 'trabajo_final'
 USUARIO = 'postgres'
-PASSWORD = 'root'
+PASSWORD = 'pass'
 
 
 def EstablecerConexion():
